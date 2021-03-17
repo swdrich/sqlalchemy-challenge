@@ -35,8 +35,8 @@ def index():
             f"/api/v1.0/stations<br/>"
             f"/api/v1.0/tobs<br/>"
             f"/api/v1.0/precipitation<br/>"
-            f"/api/v1.0/<start>"
-            f"/api/v1.0/<start>/<end>")
+            f"/api/v1.0/YYYY-mm-dd/YYYY-mm-dd"
+            )
 
 
 # Define what to do when a user hits the /stations route
@@ -79,19 +79,21 @@ def precipitation():
     for date, prcp in results:
         precip_dict = {}   
         precip_dict["date"] = date
-        precip_dict["prcp"] = tobs
+        precip_dict["prcp"] = prcp
         all_precip.append(precip_dict)    
     
     return jsonify(all_precip) 
 
-# Define what to do when a user hits the /start and /start/end routes
-@app.route("api/v1.0/<start>")
-def variable_start(start):
+
+# Define what to do when a user hits the /start/end routes
+@app.route("/api/v1.0/<start>/<end>")
+def variable_start(start, end):
     session = Session(engine)
-    results = session.query(Measurement.date, Measurement.tobs).filter(Measurement.date >= '2016-08-23').\
-            filter(Measurement.station == 'USC00519281').all()
+    results = session.query(Measurement.date, Measurement.tobs).filter(Measurement.date >= '%Y-%m-%d').\
+            filter(Measurement.date <= '%Y-%m-%d').all()
     session.close()
 
+    
 
 
 if __name__ == "__main__":
