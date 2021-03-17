@@ -1,5 +1,6 @@
 ### Import dependencies ###
 import numpy as np
+import datetime as dt
 
 import sqlalchemy
 from sqlalchemy.ext.automap import automap_base
@@ -54,25 +55,48 @@ def stations():
 @app.route("/api/v1.0/tobs")
 def tobs():
     session = Session(engine)
-    results = session.query(Measurement.date, Measurement.tobs).filter(Measurement.date >= '2016-08-23').\
-            filter(Measurement.station == 'USC00519281').all()
+
+    #Work out dates
+    recent_date = session.query(Measurement.date).order_by(Measurement.date.desc()).first()
+    recent_date = recent_date[0]
+    print(recent_date)
+
+    recent_date = dt.datetime.strptime(recent_date, '%Y-%m-%d')
+    last_year = recent_date.date() - dt.timedelta(days=365)
+    print(last_year)
+
+    # Join tables
+    sel = [Station.id, Station.name, Station.station, Measurement.station, Measurement.date, Measurement.tobs]
+    results = session.query(*sel).filter(Station.station == Measurement.station).\
+        filter(Measurement.date >= last_year).all()
     session.close()
 
-    all_temps = []
-    for date, tobs in results:
-        temp_obs = {}   
-        temp_obs["date"] = date
-        temp_obs["tobs"] = tobs
-        all_temps.append(temp_obs)    
+    # all_temps = []
+    # for date, tobs in results:
+    #     temp_obs = {}   
+    #     temp_obs["date"] = date
+    #     temp_obs["tobs"] = tobs
+    #     all_temps.append(temp_obs)    
     
-    return jsonify(all_temps) 
+    return jsonify(results) 
             
             
 # Define what to do when a user hits the /precipitation route
 @app.route("/api/v1.0/precipitation")
 def precipitation():
     session = Session(engine)
-    results = session.query(Measurement.date, Measurement.prcp).filter(Measurement.date >= '2016-08-23').all()
+
+    # Work out dates
+    recent_date = session.query(Measurement.date).order_by(Measurement.date.desc()).first()
+    recent_date = recent_date[0]
+    print(recent_date)
+
+    recent_date = dt.datetime.strptime(recent_date, '%Y-%m-%d')
+    last_year = recent_date.date() - dt.timedelta(days=365)
+    print(last_year)
+
+    # Perform query
+    results = session.query(Measurement.date, Measurement.prcp).filter(Measurement.date >= last_year).all()
     session.close()
 
     all_precip = []
