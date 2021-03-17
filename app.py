@@ -86,22 +86,24 @@ def precipitation():
 
 
 # Define what to do when a user hits the /start/end route
+@app.route("/api/v1.0/<start>")
 @app.route("/api/v1.0/<start>/<end>")
-def variable_date(start, end):
+def variable_date(start=None, end='2017-08-23'):
     session = Session(engine)
-    results = session.query(Measurement.date, Measurement.tobs).filter(Measurement.date >= '%Y-%m-%d').\
-        filter(Measurement.date <= '%Y-%m-%d').filter(Measurement.station == 'USC00519281').all()
+    sel = [func.min(Measurement.tobs),
+           func.max(Measurement.tobs),
+           func.avg(Measurement.tobs)]
+    results = session.query(*sel).filter(Measurement.date >= start).\
+        filter(Measurement.date <= end).all()
     session.close()
-
-    all_temps = []
-    for date, tobs in results:
-    #     temp_obs = {}   
-    #     temp_obs["date"] = date
-    #     temp_obs["tobs"] = tobs
-    #     all_temps.append(temp_obs)    
     
-    # return jsonify(all_temps)
-        print(date,tobs)
+    temp_dict = {"Min Temp": results[0][0],
+                 "Max Temp": results[0][1],
+                 "Avg Temp": results[0][2]}
+
+    print(start, end)
+    return jsonify(temp_dict)
+    
 
 if __name__ == "__main__":
     app.run(debug=True)
