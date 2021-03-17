@@ -35,8 +35,8 @@ def index():
             f"/api/v1.0/stations<br/>"
             f"/api/v1.0/tobs<br/>"
             f"/api/v1.0/precipitation<br/>"
-            f"/api/v1.0/YYYY-mm-dd/YYYY-mm-dd"
-            )
+            f"/api/v1.0/start-date/end-date</br>"
+            f"&nbsp&nbsp&nbsp&nbsp When entering start and end dates for variable API, please use 'YYYY-mm-dd' format.")
 
 
 # Define what to do when a user hits the /stations route
@@ -85,16 +85,23 @@ def precipitation():
     return jsonify(all_precip) 
 
 
-# Define what to do when a user hits the /start/end routes
+# Define what to do when a user hits the /start/end route
 @app.route("/api/v1.0/<start>/<end>")
-def variable_start(start, end):
+def variable_date(start, end):
     session = Session(engine)
     results = session.query(Measurement.date, Measurement.tobs).filter(Measurement.date >= '%Y-%m-%d').\
-            filter(Measurement.date <= '%Y-%m-%d').all()
+        filter(Measurement.date <= '%Y-%m-%d').filter(Measurement.station == 'USC00519281').all()
     session.close()
 
+    all_temps = []
+    for date, tobs in results:
+    #     temp_obs = {}   
+    #     temp_obs["date"] = date
+    #     temp_obs["tobs"] = tobs
+    #     all_temps.append(temp_obs)    
     
-
+    # return jsonify(all_temps)
+        print(date,tobs)
 
 if __name__ == "__main__":
     app.run(debug=True)
