@@ -58,6 +58,7 @@ def tobs():
 
     #Work out dates
     recent_date = session.query(Measurement.date).order_by(Measurement.date.desc()).first()
+    session.close
     recent_date = recent_date[0]
     print(recent_date)
 
@@ -65,22 +66,21 @@ def tobs():
     last_year = recent_date.date() - dt.timedelta(days=365)
     print(last_year)
 
-    # Join tables
-    sel = [Station.id, Station.name, Station.station, Measurement.station, Measurement.date, Measurement.tobs]
-    results = session.query(*sel).filter(Station.station == Measurement.station).\
-        filter(Measurement.date >= last_year).all()
-    session.close()
+    # Work out station counts
+    max_station = session.query(Measurement.station, func.count(Measurement.station)).\
+        group_by(Measurement.station).order_by(func.count(Measurement.station).desc()).all()
+    session.close
+    max_station = max_station[0][0]
+    print(max_station)
 
-    # all_temps = []
-    # for date, tobs in results:
-    #     temp_obs = {}   
-    #     temp_obs["date"] = date
-    #     temp_obs["tobs"] = tobs
-    #     all_temps.append(temp_obs)    
+    #Query temperature observations
+    results = session.query(Measurement.tobs).filter(Measurement.date >= last_year).filter(Measurement.station == max_station).all()
+
+    temp_obs = list(np.ravel(results))
     
-    return jsonify(results) 
-            
-            
+    return jsonify(temp_obs)
+    
+   
 # Define what to do when a user hits the /precipitation route
 @app.route("/api/v1.0/precipitation")
 def precipitation():
@@ -128,6 +128,7 @@ def variable_date(start=None, end='2017-08-23'):
     print(start, end)
     return jsonify(temp_dict)
     
+##############################
 
 if __name__ == "__main__":
     app.run(debug=True)
